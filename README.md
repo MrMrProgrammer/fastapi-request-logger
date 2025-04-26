@@ -82,4 +82,3 @@ def delayed_endpoint():
 
         return {"message": f"Response after {delay:.2f} seconds delay"}
 ```
-
