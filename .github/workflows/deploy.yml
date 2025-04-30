@@ -10,33 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy files to VPS via SSH
+        uses: appleboy/scp-action@v0.1.4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: 89.42.199.153
+          port: 43785
+          username: root
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          source: "."
+          target: "/root/fastapi-request-logger"
+          overwrite: true
+          strip_components: 1
 
-      - name: Deploy on VPS
-        run: |
-          ssh -p 43785 -o StrictHostKeyChecking=no root@89.42.199.153 << 'EOF'
-            set -e
-
-            # اگر پروژه وجود نداره، کلونش کن
-            if [ ! -d /root/fastapi-request-logger ]; then
-              git clone git@github.com:MrMrProgrammer/fastapi-request-logger.git /root/fastapi-request-logger
-            fi
-
+      - name: Run deployment script on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 89.42.199.153
+          port: 43785
+          username: root
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          script: |
             cd /root/fastapi-request-logger
-            git pull origin main
-
-            # حذف کانتینرهای قبلی (اگر هستن)
-            docker stop fastapi-app || true
-            docker rm fastapi-app || true
-            docker stop grafana || true
-            docker rm grafana || true
-            docker stop tempo || true
-            docker rm tempo || true
-
-            # اجرای مجدد run.sh
             chmod +x run.sh
             ./run.sh
-          EOF
