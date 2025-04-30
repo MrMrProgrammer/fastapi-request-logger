@@ -10,3 +10,4 @@ docker run -d --name grafana --network observability-net -p 3000:3000 grafana/gr
 # اجرای FastAPI روی شبکه
 docker build -t fastapi-app .
 docker run -d --name fastapi-app --network observability-net -p 9002:9002 -v $(pwd):/app fastapi-app
+
