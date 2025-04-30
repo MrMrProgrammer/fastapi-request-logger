@@ -1,4 +1,4 @@
-name: Deploy FastAPI Project
+name: Deploy to VPS
 
 on:
   push:
@@ -10,30 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.7.0
+        uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy on Server via SSH
+      - name: Deploy on VPS
         run: |
-          ssh -o StrictHostKeyChecking=no hashemi@192.168.11.70 << 'EOF'
+          ssh -o StrictHostKeyChecking=no root@89.42.199.153 << 'EOF'
             set -e
 
-            cd /home/hashemi/Desktop/fastapi-request-logger
+            # اگر پروژه وجود نداره، کلونش کن
+            if [ ! -d /root/fastapi-request-logger ]; then
+              git clone git@github.com:MrMrProgrammer/fastapi-request-logger.git /root/fastapi-request-logger
+            fi
 
-            echo "Pulling latest code..."
+            cd /root/fastapi-request-logger
             git pull origin main
 
-            echo "Stopping old container (if exists)..."
-            docker ps -q --filter "name=request_logger" | grep -q . && docker stop request_logger && docker rm request_logger || echo "No container to stop."
+            # حذف کانتینرهای قبلی (اگر هستن)
+            docker stop fastapi-app || true
+            docker rm fastapi-app || true
+            docker stop grafana || true
+            docker rm grafana || true
+            docker stop tempo || true
+            docker rm tempo || true
 
-            echo "Building Docker image..."
-            docker build -t request-logger .
-
-            echo "Running Docker container..."
-            docker run -d --name request_logger -p 9002:9002 request-logger
+            # اجرای مجدد run.sh
+            chmod +x run.sh
+            ./run.sh
           EOF
