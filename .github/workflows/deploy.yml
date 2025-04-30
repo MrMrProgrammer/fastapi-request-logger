@@ -17,7 +17,7 @@ jobs:
 
       - name: Deploy on VPS
         run: |
-          ssh -o StrictHostKeyChecking=no root@89.42.199.153 << 'EOF'
+          ssh -p 43785 -o StrictHostKeyChecking=no root@89.42.199.153 << 'EOF'
             set -e
 
             # اگر پروژه وجود نداره، کلونش کن
